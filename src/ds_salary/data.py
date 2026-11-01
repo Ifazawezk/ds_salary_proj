@@ -40,10 +40,14 @@ def load_raw(path: Path | str = DATA_PATH) -> pd.DataFrame:
 def clean(df: pd.DataFrame) -> pd.DataFrame:
     """Decode the survey codes, add job families and drop extreme outliers.
 
+    Rows identical in every column are counted once. About half of the file is
+    exact copies, up to 195 of a single row, and they would otherwise weigh on
+    every median and put the same row on both sides of a train/test split.
+
     Salaries outside the 1st-99th percentile of each year are dropped, since a
     few self-reported values (e.g. a wrong currency) distort the averages.
     """
-    out = df.copy()
+    out = df.drop_duplicates().copy()
     out["experience"] = out["experience_level"].map(EXPERIENCE)
     out["employment"] = out["employment_type"].map(EMPLOYMENT)
     out["company_size_label"] = out["company_size"].map(COMPANY_SIZE)

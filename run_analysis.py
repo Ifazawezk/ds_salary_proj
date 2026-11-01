@@ -31,7 +31,8 @@ def main():
     lines = [
         "# Results",
         "",
-        f"Rows: {len(raw):,} raw, {len(df):,} after removing the top and bottom 1% per year.",
+        f"Rows: {len(raw):,} in the file, {len(raw.drop_duplicates()):,} distinct, "
+        f"{len(df):,} after removing the top and bottom 1% per year.",
         "",
         "## Median salary by experience (USD)",
         "",

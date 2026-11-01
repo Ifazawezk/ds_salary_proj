@@ -52,6 +52,17 @@ def test_clean_decodes_and_trims():
     assert len(df) < 400  # the 1% tails are removed
 
 
+def test_clean_counts_identical_rows_once():
+    sample = _sample()
+    assert len(clean(pd.concat([sample, sample, sample]))) == len(clean(sample))
+
+
+def test_clean_keeps_rows_that_differ_in_salary():
+    sample = _sample()
+    other = sample.assign(salary_in_usd=sample["salary_in_usd"] + 1)
+    assert len(clean(pd.concat([sample, other]))) > len(clean(sample))
+
+
 def test_model_learns_experience():
     pipe, ev = train_and_evaluate(clean(_sample(2000)))
     base = dict(work_year=2025, employment="Full-time", family="Data Science", company_location="US",
