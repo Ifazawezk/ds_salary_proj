@@ -9,6 +9,11 @@ from ds_salary.data import COMPANY_SIZE, EMPLOYMENT, EXPERIENCE, REMOTE, TITLE_F
 from ds_salary.model import predict, train_and_evaluate
 
 
+def _thousands(value: float) -> str:
+    """Round to the nearest thousand: a figure this rough should not look exact."""
+    return f"{round(value, -3):,.0f}"
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="ds-salary", description="Estimate an AI/ML/data salary in USD.")
     p.add_argument("--experience", choices=list(EXPERIENCE.values()), default="Mid")
@@ -22,10 +27,10 @@ def main(argv=None):
     args = p.parse_args(argv)
 
     df = load()
-    pipe, ev = train_and_evaluate(df)
+    estimator, ev = train_and_evaluate(df)
     country = args.country.upper()
     estimate = predict(
-        pipe,
+        estimator.pipe,
         work_year=args.year,
         experience=args.experience,
         employment=args.employment,
@@ -36,8 +41,15 @@ def main(argv=None):
         same_country=not args.abroad,
     )
     n = (df["company_location"] == country).sum()
-    print(f"Estimated salary: ${estimate:,.0f} per year")
-    print(f"(typical error about ${ev.mae_model:,.0f}; {n:,} survey responses from companies in {country})")
+    market = estimator.market(country)
+    spread = estimator.spread(country)
+    print(f"Estimated salary: ${_thousands(estimate)} per year")
+    print(f"Likely range: ${_thousands(estimate * spread.low)} to ${_thousands(estimate * spread.high)}")
+    where = country if market == country else "countries with few responses"
+    print(
+        f"(On unseen {ev.test_year} data for {where}, half of the estimates were within "
+        f"{spread.typical_error:.0%}. Rows from companies in {country}: {n:,}.)"
+    )
     if n < 50:
         print("Warning: few responses for this country, so the estimate leans on other countries.")
 
