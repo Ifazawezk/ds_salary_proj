@@ -32,6 +32,14 @@ Rows: 151,445 in the file, 71,913 distinct, 70,492 after removing the top and bo
 | On-site | $138,000 |
 | Remote | $140,600 |
 
+## Median salary by work mode, inside and outside the US (USD)
+
+| Mode | US median | US rows | Elsewhere median | Elsewhere rows |
+|---|---|---|---|---|
+| Hybrid | $115,000 | 52 | $66,794 | 242 |
+| On-site | $147,000 | 44,578 | $90,879 | 8,450 |
+| Remote | $145,360 | 14,729 | $109,285 | 2,441 |
+
 ## Model
 
 Gradient boosting on log salary, trained on 32,972 rows from the years before 2025. Half of 2025 (18,760 rows) sets the salary ranges and the other half (18,760 rows) gives the figures below.
@@ -59,3 +67,18 @@ The range is meant to hold 8 in 10 salaries. Over all test rows it held 79.8%.
 | AU | 153 | $118,267 | $27,346 | 12% | 76% |
 | NL | 136 | $71,842 | $23,461 | 27% | 80% |
 | DE | 83 | $91,789 | $37,061 | 34% | 82% |
+
+## What drives pay
+
+How much accuracy (R^2 on log salary) is lost when one feature is shuffled in the test rows.
+
+| Feature | Loss of R^2 |
+|---|---|
+| company_location | 0.247 |
+| experience | 0.184 |
+| family | 0.134 |
+| employment | 0.005 |
+| work_mode | 0.003 |
+| company_size_label | 0.000 |
+| same_country | 0.000 |
+| work_year | 0.000 |

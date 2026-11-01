@@ -4,7 +4,7 @@ from pathlib import Path
 
 from ds_salary import plots
 from ds_salary.data import load, load_raw
-from ds_salary.model import train_and_evaluate
+from ds_salary.model import split_by_latest_year, train_and_evaluate, what_drives_pay
 
 ROOT = Path(__file__).parent
 FIG = ROOT / "figures"
@@ -23,11 +23,16 @@ def main():
     plots.remote(df, FIG / "salary_remote.png")
     plots.countries(df, FIG / "salary_by_country.png")
 
-    _, ev = train_and_evaluate(df)
+    estimator, ev = train_and_evaluate(df)
+    _, _, test = split_by_latest_year(df)
+    importance = what_drives_pay(estimator.pipe, test)
 
     exp = df.groupby("experience")["salary_in_usd"].median()
     fam = df.groupby("family")["salary_in_usd"].median().sort_values(ascending=False)
     mode = df.groupby("work_mode")["salary_in_usd"].median()
+    in_us = df["company_location"] == "US"
+    us_mode = df[in_us].groupby("work_mode")["salary_in_usd"].agg(["median", "size"])
+    rest_mode = df[~in_us].groupby("work_mode")["salary_in_usd"].agg(["median", "size"])
     lines = [
         "# Results",
         "",
@@ -51,6 +56,16 @@ def main():
         "| Mode | Median |",
         "|---|---|",
         *[f"| {k} | ${v:,.0f} |" for k, v in mode.items()],
+        "",
+        "## Median salary by work mode, inside and outside the US (USD)",
+        "",
+        "| Mode | US median | US rows | Elsewhere median | Elsewhere rows |",
+        "|---|---|---|---|---|",
+        *[
+            f"| {k} | ${us_mode.loc[k, 'median']:,.0f} | {us_mode.loc[k, 'size']:,.0f} "
+            f"| ${rest_mode.loc[k, 'median']:,.0f} | {rest_mode.loc[k, 'size']:,.0f} |"
+            for k in mode.index
+        ],
         "",
         "## Model",
         "",
@@ -79,6 +94,14 @@ def main():
             f"| {m.market} | {m.rows:,} | ${m.median_salary:,.0f} | ${m.mae:,.0f} | {m.typical_error:.0%} | {m.coverage:.0%} |"
             for m in ev.markets
         ],
+        "",
+        "## What drives pay",
+        "",
+        "How much accuracy (R^2 on log salary) is lost when one feature is shuffled in the test rows.",
+        "",
+        "| Feature | Loss of R^2 |",
+        "|---|---|",
+        *[f"| {k} | {v:.3f} |" for k, v in importance.items()],
         "",
     ]
     REPORT.write_text("\n".join(lines), encoding="utf-8")

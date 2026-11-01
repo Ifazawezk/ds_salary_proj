@@ -6,7 +6,14 @@ import pytest
 
 from ds_salary.cli import main
 from ds_salary.data import clean, title_family
-from ds_salary.model import OTHER_COUNTRIES, calibrate, predict, split_by_latest_year, train_and_evaluate
+from ds_salary.model import (
+    OTHER_COUNTRIES,
+    calibrate,
+    predict,
+    split_by_latest_year,
+    train_and_evaluate,
+    what_drives_pay,
+)
 
 
 @pytest.mark.parametrize(
@@ -153,6 +160,18 @@ def test_fair_baseline_knows_the_country():
     _, ev = train_and_evaluate(clean(_countries_sample()))
     assert ev.mae_fair_baseline < ev.mae_baseline
     assert ev.gain_low <= ev.gain_high
+
+
+def test_what_drives_pay_finds_the_real_causes():
+    df = clean(_countries_sample())
+    estimator, _ = train_and_evaluate(df)
+    _, _, test = split_by_latest_year(df)
+    importance = what_drives_pay(estimator.pipe, test)
+    # Pay in this sample depends on country and experience, and on nothing else.
+    assert set(list(importance)[:2]) == {"company_location", "experience"}
+    assert importance["experience"] > 0.1
+    assert importance["work_mode"] < 0.02
+    assert list(importance.values()) == sorted(importance.values(), reverse=True)
 
 
 def test_cli_prints_a_range_around_the_estimate(capsys):

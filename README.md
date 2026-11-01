@@ -8,10 +8,13 @@ An analysis of **about 72,000 distinct salary rows** from the [aijobs.net salary
 
 | | |
 |---|---|
-| **Experience matters most** | Median pay roughly doubles from Entry ($88k) to Executive ($189k). |
+| **Location matters most** | Median pay is $146.5k at US companies and $93k elsewhere. Shuffling the country costs the model the most accuracy (0.247 of R^2), ahead of experience (0.184) and job family (0.134). 84% of rows come from US companies, so treat other countries with care. |
+| **Experience comes second** | Median pay roughly doubles from Entry ($88k) to Executive ($189k). |
 | **ML / AI roles pay the most** | ML and AI roles have a median of $169k, against $103k for analytics and BI roles. |
-| **Remote pays about the same as on-site** | Median $141k remote vs $138k on-site. Hybrid responses are lower ($76k), mostly because they come from smaller markets. |
-| **Location is the second biggest factor** | US companies pay far more than the rest of the sample. 84% of rows come from US companies, so treat other countries with care. |
+| **Remote pays about the same as on-site in the US** | Median $145k remote vs $147k on-site at US companies. Elsewhere remote is higher, $109k vs $91k. |
+| **Hybrid is too rare to judge** | Only 294 rows, 82% of them outside the US and about half from 2020 to 2022. Market explains part of its low median ($76k) but not all: it is also lower inside the US ($115k vs $147k, on 52 rows) and elsewhere ($67k vs $91k). |
+
+Company size, work mode and year barely change the model's accuracy (0.003 or less of R^2 each), so its estimate rests on country, experience and job family.
 
 Full numbers: [reports/results.md](reports/results.md).
 
@@ -75,7 +78,7 @@ Three limits on these figures:
 
 ```bash
 pip install -e ".[dev]"
-python run_analysis.py   # rebuilds figures/ and reports/results.md, about 20 seconds
+python run_analysis.py   # rebuilds figures/ and reports/results.md, about 5 seconds
 pytest                   # tests
 ```
 

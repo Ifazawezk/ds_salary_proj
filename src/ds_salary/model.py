@@ -154,6 +154,16 @@ def _gain_interval(actual: np.ndarray, model: np.ndarray, baseline: np.ndarray, 
     return float(low), float(high)
 
 
+def what_drives_pay(pipe: Pipeline, test: pd.DataFrame, seed: int = 42, rows: int = 6000) -> dict[str, float]:
+    """How much accuracy (R^2 on log salary) is lost when each feature is shuffled, largest first."""
+    sample = test.sample(min(rows, len(test)), random_state=seed)
+    result = permutation_importance(
+        pipe, _features(sample), np.log(sample["salary_in_usd"]), n_repeats=3, random_state=seed
+    )
+    importance = dict(zip(FEATURES, result.importances_mean.tolist()))
+    return dict(sorted(importance.items(), key=lambda item: item[1], reverse=True))
+
+
 def train_and_evaluate(df: pd.DataFrame, seed: int = 42) -> tuple[Estimator, Evaluation]:
     train, calibration, test = split_by_latest_year(df, seed)
 
